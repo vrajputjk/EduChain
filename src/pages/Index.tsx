@@ -32,18 +32,21 @@ const Index = () => {
         <div className="absolute inset-0 gradient-hero opacity-10"></div>
         <div className="container mx-auto px-4 py-24 relative">
           <div className="max-w-4xl mx-auto text-center">
+            <div className="mb-6 inline-block px-4 py-2 bg-secondary/20 rounded-full text-secondary font-medium">
+              🇮🇳 Powering India's Education Supply Chain
+            </div>
             <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 animate-fade-in">
               Transparent Distribution of
               <span className="text-primary"> Educational Supplies</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "100ms" }}>
-              Track every school supply from manufacturers to students using blockchain technology.
-              Ensure accountability, prevent corruption, and build trust in the education supply chain.
+              From Sarva Shiksha Abhiyan to PM POSHAN - Track every textbook, uniform, and meal supply 
+              across India using blockchain technology. Supporting government schemes with complete transparency.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: "200ms" }}>
-              <Link to="/dashboard">
+              <Link to="/auth">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8">
-                  View Dashboard
+                  Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
@@ -60,9 +63,10 @@ const Index = () => {
       <section id="features" className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Why EduChain?</h2>
+            <h2 className="text-4xl font-bold text-foreground mb-4">Why EduChain for India?</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Blockchain-powered transparency ensures every textbook, uniform, and supply reaches its intended recipient
+              Designed specifically for India's diverse education ecosystem - from CBSE to State Boards, 
+              covering all 28 states and 8 union territories
             </p>
           </div>
 
@@ -70,23 +74,23 @@ const Index = () => {
             {[
               {
                 icon: Shield,
-                title: "Prevent Corruption",
-                description: "Immutable records prevent theft, fraud, and manipulation of supply data",
+                title: "Government Scheme Support",
+                description: "Integrated with SSA, PM POSHAN, and other national education programs",
               },
               {
                 icon: TrendingUp,
-                title: "Full Traceability",
-                description: "Track every item from production to delivery with complete transparency",
+                title: "Pan-India Coverage",
+                description: "Track supplies from Kashmir to Kanyakumari with state-wise monitoring",
               },
               {
                 icon: CheckCircle,
-                title: "Smart Verification",
-                description: "Automated smart contracts ensure compliance and genuine item distribution",
+                title: "Multi-Board Compatible",
+                description: "Supports NCERT, CBSE, ICSE, and all State Board requirements",
               },
               {
                 icon: Users,
-                title: "Build Trust",
-                description: "Parents, schools, and governments can verify supply authenticity",
+                title: "Stakeholder Trust",
+                description: "Parents, teachers, and officials can verify every transaction in real-time",
               },
             ].map((feature, index) => (
               <Card key={index} className="shadow-soft animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
@@ -158,13 +162,13 @@ const Index = () => {
 
       <section className="py-24 bg-gradient-hero">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">Ready to Transform Education Supply Chains?</h2>
+          <h2 className="text-4xl font-bold text-white mb-4">Ready to Transform India's Education Supply Chain?</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join the movement for transparent, accountable distribution of educational resources
+            Join thousands of suppliers, schools, and government bodies ensuring every child gets quality education materials
           </p>
-          <Link to="/register">
+          <Link to="/auth">
             <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8">
-              Register Your First Batch
+              Get Started Today
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
