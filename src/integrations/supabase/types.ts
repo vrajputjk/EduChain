@@ -14,16 +14,320 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          document_type: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          supply_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          document_type: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          supply_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          document_type?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          supply_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_supply_id_fkey"
+            columns: ["supply_id"]
+            isOneToOne: false
+            referencedRelation: "supplies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          district: string | null
+          full_name: string
+          id: string
+          organization_name: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          district?: string | null
+          full_name: string
+          id: string
+          organization_name?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          district?: string | null
+          full_name?: string
+          id?: string
+          organization_name?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schools: {
+        Row: {
+          block: string | null
+          board: Database["public"]["Enums"]["education_board"]
+          contact_person: string | null
+          created_at: string
+          district: string
+          id: string
+          name: string
+          phone: string | null
+          pincode: string | null
+          state: string
+          student_count: number | null
+        }
+        Insert: {
+          block?: string | null
+          board: Database["public"]["Enums"]["education_board"]
+          contact_person?: string | null
+          created_at?: string
+          district: string
+          id?: string
+          name: string
+          phone?: string | null
+          pincode?: string | null
+          state: string
+          student_count?: number | null
+        }
+        Update: {
+          block?: string | null
+          board?: Database["public"]["Enums"]["education_board"]
+          contact_person?: string | null
+          created_at?: string
+          district?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          pincode?: string | null
+          state?: string
+          student_count?: number | null
+        }
+        Relationships: []
+      }
+      supplies: {
+        Row: {
+          actual_delivery_date: string | null
+          batch_id: string
+          blockchain_hash: string | null
+          category: string
+          created_at: string
+          current_status: Database["public"]["Enums"]["supply_status"]
+          description: string | null
+          destination_district: string
+          destination_school_id: string | null
+          destination_state: string
+          education_board: Database["public"]["Enums"]["education_board"] | null
+          expected_delivery_date: string | null
+          government_scheme: string | null
+          id: string
+          item_type: string
+          manufacture_date: string
+          qr_code: string | null
+          quantity: number
+          supplier_id: string | null
+          total_value: number | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          actual_delivery_date?: string | null
+          batch_id: string
+          blockchain_hash?: string | null
+          category: string
+          created_at?: string
+          current_status?: Database["public"]["Enums"]["supply_status"]
+          description?: string | null
+          destination_district: string
+          destination_school_id?: string | null
+          destination_state: string
+          education_board?:
+            | Database["public"]["Enums"]["education_board"]
+            | null
+          expected_delivery_date?: string | null
+          government_scheme?: string | null
+          id?: string
+          item_type: string
+          manufacture_date?: string
+          qr_code?: string | null
+          quantity: number
+          supplier_id?: string | null
+          total_value?: number | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          actual_delivery_date?: string | null
+          batch_id?: string
+          blockchain_hash?: string | null
+          category?: string
+          created_at?: string
+          current_status?: Database["public"]["Enums"]["supply_status"]
+          description?: string | null
+          destination_district?: string
+          destination_school_id?: string | null
+          destination_state?: string
+          education_board?:
+            | Database["public"]["Enums"]["education_board"]
+            | null
+          expected_delivery_date?: string | null
+          government_scheme?: string | null
+          id?: string
+          item_type?: string
+          manufacture_date?: string
+          qr_code?: string | null
+          quantity?: number
+          supplier_id?: string | null
+          total_value?: number | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplies_destination_school_id_fkey"
+            columns: ["destination_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplies_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          block_hash: string
+          from_location: string
+          from_party: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          notes: string | null
+          previous_hash: string | null
+          status: Database["public"]["Enums"]["supply_status"]
+          supply_id: string
+          timestamp: string
+          to_location: string
+          to_party: string | null
+          transaction_type: string
+          verified_by: string | null
+        }
+        Insert: {
+          block_hash: string
+          from_location: string
+          from_party?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          previous_hash?: string | null
+          status: Database["public"]["Enums"]["supply_status"]
+          supply_id: string
+          timestamp?: string
+          to_location: string
+          to_party?: string | null
+          transaction_type: string
+          verified_by?: string | null
+        }
+        Update: {
+          block_hash?: string
+          from_location?: string
+          from_party?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          previous_hash?: string | null
+          status?: Database["public"]["Enums"]["supply_status"]
+          supply_id?: string
+          timestamp?: string
+          to_location?: string
+          to_party?: string | null
+          transaction_type?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_supply_id_fkey"
+            columns: ["supply_id"]
+            isOneToOne: false
+            referencedRelation: "supplies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_block_hash: {
+        Args: { supply_uuid: string; tx_type: string }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      education_board: "CBSE" | "ICSE" | "State Board" | "Other"
+      supply_status:
+        | "manufactured"
+        | "quality_checked"
+        | "in_warehouse"
+        | "in_transit"
+        | "delivered"
+        | "verified"
+      user_role:
+        | "admin"
+        | "supplier"
+        | "distributor"
+        | "school"
+        | "government_official"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +454,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      education_board: ["CBSE", "ICSE", "State Board", "Other"],
+      supply_status: [
+        "manufactured",
+        "quality_checked",
+        "in_warehouse",
+        "in_transit",
+        "delivered",
+        "verified",
+      ],
+      user_role: [
+        "admin",
+        "supplier",
+        "distributor",
+        "school",
+        "government_official",
+      ],
+    },
   },
 } as const
