@@ -9,6 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { USER_ROLES } from "@/lib/constants/india";
+import { z } from "zod";
+import { Session } from "@supabase/supabase-js";
+
+// Validation schemas
+const emailSchema = z.string().email("Please enter a valid email address");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+const signUpSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  fullName: z.string().trim().min(2, "Full name must be at least 2 characters").max(100, "Full name is too long"),
+  organizationName: z.string().trim().min(2, "Organization name must be at least 2 characters").max(100, "Organization name is too long"),
+  role: z.enum(["supplier", "distributor", "school", "government_official"]),
+});
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,17 +31,29 @@ const Auth = () => {
   const [organizationName, setOrganizationName] = useState("");
   const [role, setRole] = useState("supplier");
   const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        if (session) {
+          navigate("/dashboard");
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
       if (session) {
         navigate("/dashboard");
       }
-    };
-    checkSession();
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -37,18 +62,60 @@ const Auth = () => {
 
     try {
       if (isLogin) {
+        // Validate email and password
+        const emailValidation = emailSchema.safeParse(email);
+        const passwordValidation = passwordSchema.safeParse(password);
+        
+        if (!emailValidation.success) {
+          toast.error(emailValidation.error.errors[0].message);
+          setLoading(false);
+          return;
+        }
+        
+        if (!passwordValidation.success) {
+          toast.error(passwordValidation.error.errors[0].message);
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          // Handle specific error cases
+          if (error.message.includes("Invalid login credentials")) {
+            toast.error("Invalid email or password. Please try again.");
+          } else if (error.message.includes("Email not confirmed")) {
+            toast.error("Please verify your email before signing in.");
+          } else {
+            toast.error(error.message);
+          }
+          setLoading(false);
+          return;
+        }
 
         if (data.session) {
           toast.success("Welcome back to EduChain!");
-          navigate("/dashboard");
+          // Navigation handled by auth state listener
         }
       } else {
+        // Validate all signup fields
+        const validation = signUpSchema.safeParse({
+          email,
+          password,
+          fullName,
+          organizationName,
+          role,
+        });
+
+        if (!validation.success) {
+          toast.error(validation.error.errors[0].message);
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -62,15 +129,32 @@ const Auth = () => {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          // Handle specific error cases
+          if (error.message.includes("User already registered")) {
+            toast.error("This email is already registered. Please sign in instead.");
+          } else if (error.message.includes("Password should be at least")) {
+            toast.error("Password is too weak. Please use a stronger password.");
+          } else {
+            toast.error(error.message);
+          }
+          setLoading(false);
+          return;
+        }
 
         if (data.user) {
           toast.success("Account created successfully! You can now login.");
           setIsLogin(true);
+          // Clear form
+          setEmail("");
+          setPassword("");
+          setFullName("");
+          setOrganizationName("");
+          setRole("supplier");
         }
       }
     } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
