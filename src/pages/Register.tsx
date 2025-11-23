@@ -23,6 +23,7 @@ import {
   SUPPLY_CATEGORIES,
   EDUCATION_BOARDS,
 } from "@/lib/constants/india";
+import { z } from "zod";
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
@@ -53,11 +54,41 @@ const Register = () => {
 
   const navigate = useNavigate();
 
+  // Validation schema
+  const supplySchema = z.object({
+    category: z.string().min(1, "Category is required"),
+    itemType: z.string().trim().min(1, "Item type is required").max(100, "Item type must be less than 100 characters"),
+    batchId: z.string().trim().min(1, "Batch ID is required").max(50, "Batch ID must be less than 50 characters"),
+    quantity: z.string().refine((val) => {
+      const num = Number(val);
+      return !isNaN(num) && num > 0 && num <= 1000000 && Number.isInteger(num);
+    }, "Quantity must be a positive whole number not exceeding 1,000,000"),
+    unitPrice: z.string().refine((val) => {
+      const num = Number(val);
+      return !isNaN(num) && num > 0 && num <= 10000000;
+    }, "Unit price must be positive and not exceed 10,000,000"),
+    governmentScheme: z.string().optional(),
+    educationBoard: z.string().min(1, "Education board is required"),
+    destinationState: z.string().min(1, "Destination state is required"),
+    destinationDistrict: z.string().min(1, "Destination district is required"),
+    description: z.string().trim().min(10, "Description must be at least 10 characters").max(2000, "Description must be less than 2000 characters"),
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Validate form data
+      const validationResult = supplySchema.safeParse(formData);
+      
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors.map(err => err.message).join(", ");
+        toast.error(`Validation failed: ${errors}`);
+        setLoading(false);
+        return;
+      }
+      
       const totalValue = Number(formData.quantity) * Number(formData.unitPrice);
 
       // Generate blockchain hash
@@ -109,7 +140,6 @@ const Register = () => {
 
       navigate("/dashboard");
     } catch (error: any) {
-      console.error("Registration error:", error);
       toast.error(error.message || "Failed to register supply batch");
     } finally {
       setLoading(false);

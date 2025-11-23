@@ -160,7 +160,7 @@ export type Database = {
           manufacture_date: string
           qr_code: string | null
           quantity: number
-          supplier_id: string | null
+          supplier_id: string
           total_value: number | null
           unit_price: number | null
           updated_at: string
@@ -186,7 +186,7 @@ export type Database = {
           manufacture_date?: string
           qr_code?: string | null
           quantity: number
-          supplier_id?: string | null
+          supplier_id: string
           total_value?: number | null
           unit_price?: number | null
           updated_at?: string
@@ -212,7 +212,7 @@ export type Database = {
           manufacture_date?: string
           qr_code?: string | null
           quantity?: number
-          supplier_id?: string | null
+          supplier_id?: string
           total_value?: number | null
           unit_price?: number | null
           updated_at?: string
@@ -303,6 +303,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -311,6 +332,13 @@ export type Database = {
       generate_block_hash: {
         Args: { supply_uuid: string; tx_type: string }
         Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
