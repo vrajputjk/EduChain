@@ -91,14 +91,14 @@ const Register = () => {
       
       const totalValue = Number(formData.quantity) * Number(formData.unitPrice);
 
-      // Generate blockchain hash
-      const { data: hashData, error: hashError } = await supabase
-        .rpc("generate_block_hash", {
-          supply_uuid: crypto.randomUUID(),
-          tx_type: "REGISTRATION",
-        });
-
-      if (hashError) throw hashError;
+      // Generate blockchain hash client-side
+      const dataToHash = `${formData.batchId}-${formData.itemType}-${Date.now()}-${Math.random()}`;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(dataToHash);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const blockchainHash = `0x${hashHex}`;
 
       // Insert supply record
       const { data: supplyData, error: supplyError } = await supabase
@@ -116,7 +116,7 @@ const Register = () => {
           destination_state: formData.destinationState,
           destination_district: formData.destinationDistrict,
           description: formData.description,
-          blockchain_hash: hashData,
+          blockchain_hash: blockchainHash,
           current_status: "manufactured" as any,
         }])
         .select()
@@ -131,11 +131,11 @@ const Register = () => {
         from_location: "Manufacturing Unit",
         to_location: "Warehouse",
         status: "manufactured",
-        block_hash: hashData,
+        block_hash: blockchainHash,
       });
 
       toast.success("Supply batch registered successfully!", {
-        description: `Batch ID: ${formData.batchId} | Blockchain Hash: ${hashData?.substring(0, 20)}...`,
+        description: `Batch ID: ${formData.batchId} | Blockchain Hash: ${blockchainHash.substring(0, 20)}...`,
       });
 
       navigate("/dashboard");
