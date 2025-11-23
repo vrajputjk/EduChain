@@ -1,45 +1,101 @@
-import { Package, QrCode, CheckCircle, Shield } from "lucide-react";
+import { Package, QrCode, CheckCircle, Shield, XCircle, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import Navbar from "@/components/Navbar";
+import { format } from "date-fns";
+
+interface Supply {
+  id: string;
+  batch_id: string;
+  item_type: string;
+  quantity: number;
+  current_status: string;
+  destination_state: string;
+  destination_district: string;
+  blockchain_hash: string | null;
+  manufacture_date: string;
+  supplier_id: string;
+  profiles?: {
+    full_name: string;
+    organization_name: string | null;
+  };
+}
 
 const Verify = () => {
-  const [verified, setVerified] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [supply, setSupply] = useState<Supply | null>(null);
+  const [verified, setVerified] = useState<boolean | null>(null);
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    setVerified(true);
+    
+    if (!searchQuery.trim()) {
+      toast.error("Please enter a Batch ID or Blockchain Hash");
+      return;
+    }
+
+    setLoading(true);
+    setVerified(null);
+    setSupply(null);
+
+    try {
+      // Try to find by batch_id first
+      let { data: supplyData, error: supplyError } = await supabase
+        .from("supplies")
+        .select(`
+          *,
+          profiles:supplier_id (
+            full_name,
+            organization_name
+          )
+        `)
+        .eq("batch_id", searchQuery.trim())
+        .single();
+
+      // If not found, try by blockchain_hash
+      if (supplyError || !supplyData) {
+        const { data: hashData, error: hashError } = await supabase
+          .from("supplies")
+          .select(`
+            *,
+            profiles:supplier_id (
+              full_name,
+              organization_name
+            )
+          `)
+          .eq("blockchain_hash", searchQuery.trim())
+          .single();
+
+        if (hashError || !hashData) {
+          setVerified(false);
+          toast.error("Supply not found in blockchain ledger");
+          return;
+        }
+
+        supplyData = hashData;
+      }
+
+      setSupply(supplyData);
+      setVerified(true);
+      toast.success("Supply verified successfully!");
+    } catch (error: any) {
+      setVerified(false);
+      toast.error(error.message || "Verification failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card shadow-soft">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2">
-              <Package className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-primary">EduChain</span>
-            </Link>
-            <nav className="flex items-center space-x-6">
-              <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">
-                Dashboard
-              </Link>
-              <Link to="/tracker" className="text-muted-foreground hover:text-foreground">
-                Track Items
-              </Link>
-              <Link to="/register" className="text-muted-foreground hover:text-foreground">
-                Register Supply
-              </Link>
-              <Link to="/verify" className="text-foreground font-medium">
-                Verify
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar currentPage="verify" />
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
@@ -59,10 +115,8 @@ const Verify = () => {
               <div className="aspect-square bg-gradient-card rounded-lg border-2 border-dashed border-border flex items-center justify-center">
                 <div className="text-center">
                   <QrCode className="h-24 w-24 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">Camera access required</p>
-                  <Button className="mt-4" variant="outline">
-                    Enable Camera
-                  </Button>
+                  <p className="text-sm text-muted-foreground mb-2">QR code scanning coming soon</p>
+                  <p className="text-xs text-muted-foreground">Use manual entry for now</p>
                 </div>
               </div>
             </CardContent>
@@ -81,26 +135,43 @@ const Verify = () => {
                   <Label htmlFor="batch-id">Batch ID or Blockchain Hash</Label>
                   <Input
                     id="batch-id"
-                    placeholder="e.g., BATCH-245 or 0x7f9a..."
+                    placeholder="e.g., BATCH-2024-001 or 0x7f9a..."
                     className="blockchain-hash"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    disabled={loading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="item-code">Item Code (Optional)</Label>
-                  <Input
-                    id="item-code"
-                    placeholder="e.g., MTH-TXT-2024"
-                  />
-                </div>
-                <Button type="submit" className="w-full bg-secondary hover:bg-secondary/90">
-                  Verify Item
+                <Button type="submit" disabled={loading} className="w-full bg-secondary hover:bg-secondary/90">
+                  {loading ? "Verifying..." : "Verify Item"}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </div>
 
-        {verified && (
+        {verified === false && (
+          <Card className="shadow-elevated animate-fade-in border-destructive">
+            <CardHeader className="bg-destructive/10">
+              <CardTitle className="text-2xl flex items-center gap-2 text-destructive">
+                <XCircle className="h-6 w-6" />
+                Verification Failed
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  This supply could not be verified. It may not exist in the blockchain ledger or the identifier is incorrect.
+                </p>
+                <Button onClick={() => setVerified(null)} variant="outline">
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {verified && supply && (
           <Card className="shadow-elevated animate-fade-in border-secondary">
             <CardHeader className="bg-secondary/10">
               <CardTitle className="text-2xl flex items-center gap-2 text-secondary">
@@ -115,7 +186,7 @@ const Verify = () => {
                     <Shield className="h-6 w-6 text-secondary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">Authentic Supply Verified</h3>
+                    <h3 className="font-semibold text-foreground mb-1">Authentic Supply Verified ✓</h3>
                     <p className="text-sm text-muted-foreground">
                       This item has been verified against the blockchain ledger and confirmed as genuine.
                     </p>
@@ -125,34 +196,70 @@ const Verify = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Item</p>
-                    <p className="font-medium text-foreground">Math Textbooks - Batch #245</p>
+                    <p className="font-medium text-foreground">{supply.item_type}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Batch ID</p>
+                    <p className="font-medium text-foreground">{supply.batch_id}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Supplier</p>
-                    <p className="font-medium text-foreground">Oxford Publishers</p>
+                    <p className="font-medium text-foreground">
+                      {supply.profiles?.organization_name || supply.profiles?.full_name || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Quantity</p>
+                    <p className="font-medium text-foreground">{supply.quantity} units</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Manufacture Date</p>
-                    <p className="font-medium text-foreground">January 15, 2024</p>
+                    <p className="font-medium text-foreground">
+                      {format(new Date(supply.manufacture_date), "MMMM dd, yyyy")}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Current Status</p>
-                    <p className="font-medium text-secondary">In Transit</p>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        supply.current_status === "delivered" || supply.current_status === "verified"
+                          ? "bg-secondary/20 text-secondary"
+                          : "bg-primary/20 text-primary"
+                      }`}
+                    >
+                      {supply.current_status.replace("_", " ").toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-muted-foreground mb-1">Destination</p>
+                    <p className="font-medium text-foreground">
+                      {supply.destination_district}, {supply.destination_state}
+                    </p>
                   </div>
                 </div>
 
-                <div className="p-4 bg-muted/50 rounded-lg border">
-                  <p className="text-xs text-muted-foreground mb-1">Blockchain Hash:</p>
-                  <p className="blockchain-hash text-primary break-all">
-                    0x7f9a5c3e2b1d8f4a6c9e3b7d2f5a8c1e4b7d9f2a5c8e1b4d7f9a2c5e8b1d4f7a
-                  </p>
-                </div>
+                {supply.blockchain_hash && (
+                  <div className="p-4 bg-muted/50 rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">Blockchain Hash:</p>
+                    <p className="blockchain-hash text-primary break-all text-sm">
+                      {supply.blockchain_hash}
+                    </p>
+                  </div>
+                )}
 
-                <Link to="/tracker">
-                  <Button className="w-full bg-primary hover:bg-primary/90">
-                    View Full Journey
-                  </Button>
-                </Link>
+                <div className="flex gap-4">
+                  <Link to="/tracker" className="flex-1">
+                    <Button className="w-full bg-primary hover:bg-primary/90">
+                      View Full Journey
+                    </Button>
+                  </Link>
+                  <Link to="/dashboard" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
