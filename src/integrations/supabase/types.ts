@@ -340,6 +340,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_supply_location: {
+        Args: {
+          p_latitude: number
+          p_location_name: string
+          p_longitude: number
+          p_supply_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       education_board: "CBSE" | "ICSE" | "State Board" | "Other"
