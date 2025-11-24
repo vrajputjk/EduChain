@@ -3,12 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import ShippingRouteMap from "@/components/ShippingRouteMap";
 
 interface Supply {
   id: string;
@@ -116,10 +118,17 @@ const Tracker = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Supply Chain Tracker</h1>
-          <p className="text-muted-foreground">Track your supply batches in real-time across India 🇮🇳</p>
+          <p className="text-muted-foreground">Track your supply batches and shipping routes in real-time across India 🇮🇳</p>
         </div>
 
-        <Card className="shadow-elevated mb-8">
+        <Tabs defaultValue="tracker" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="tracker">Supply Tracker</TabsTrigger>
+            <TabsTrigger value="route">Shipping Route</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tracker" className="space-y-8">
+            <Card className="shadow-elevated">
           <CardHeader>
             <CardTitle className="text-2xl">Search Supply Batch</CardTitle>
           </CardHeader>
@@ -300,6 +309,12 @@ const Tracker = () => {
             </Card>
           </>
         )}
+          </TabsContent>
+
+          <TabsContent value="route">
+            <ShippingRouteMap />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
