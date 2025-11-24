@@ -11,6 +11,8 @@ import Navbar from "@/components/Navbar";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import ShippingRouteMap from "@/components/ShippingRouteMap";
+import LiveTrackingMap from "@/components/LiveTrackingMap";
+import GPSSimulator from "@/components/GPSSimulator";
 
 interface Supply {
   id: string;
@@ -122,9 +124,11 @@ const Tracker = () => {
         </div>
 
         <Tabs defaultValue="tracker" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="tracker">Supply Tracker</TabsTrigger>
             <TabsTrigger value="route">Shipping Route</TabsTrigger>
+            <TabsTrigger value="live">Live GPS Tracking</TabsTrigger>
+            <TabsTrigger value="simulator">GPS Simulator</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tracker" className="space-y-8">
@@ -313,6 +317,53 @@ const Tracker = () => {
 
           <TabsContent value="route">
             <ShippingRouteMap />
+          </TabsContent>
+
+          <TabsContent value="live">
+            <LiveTrackingMap />
+          </TabsContent>
+
+          <TabsContent value="simulator">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <GPSSimulator />
+              <Card>
+                <CardHeader>
+                  <CardTitle>How to Use GPS Tracking</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">1. Prepare Supplies</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Make sure you have supplies registered with status "in_transit" in the system.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">2. Select Supply</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Choose a supply batch from the dropdown to track.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">3. Start Simulation</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Click "Start Auto-Simulation" to send GPS updates every 5 seconds, or use "Manual Update" to send one update at a time.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">4. View Live Tracking</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Switch to the "Live GPS Tracking" tab to see supplies moving on the map in real-time.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t">
+                    <h3 className="font-semibold mb-2">Real-Time Updates</h3>
+                    <p className="text-sm text-muted-foreground">
+                      All GPS updates are sent through Supabase Realtime, so multiple users can see the same supply moving simultaneously without refreshing the page.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>
